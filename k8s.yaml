@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flirty
-        image: ghcr.io/xarzoa/flirty:latest
+        image: xarzoa/flirty:latest
         env:
         - name: MONGO_URI
           valueFrom:
