@@ -33,7 +33,7 @@ jobs:
           ${{ github.repository }}:${{ steps.get_commit_number.outputs.commit_number }}
 
     - name: Set up kubectl
-      uses: azure/setup-kubectl@v1
+      uses: azure/setup-kubectl@v3
 
     - name: Deploy to Kubernetes
       env:
