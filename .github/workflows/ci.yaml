@@ -1,0 +1,66 @@
+name: Build, Push to GHCR, and Deploy to Kubernetes
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get commit number
+      id: get_commit_number
+      run: echo "::set-output name=commit_number::$(git rev-list --count HEAD)"
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}:latest
+          ghcr.io/${{ github.repository }}:${{ github.sha }}
+          ghcr.io/${{ github.repository }}:${{ steps.get_commit_number.outputs.commit_number }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v1
+
+    - name: Deploy to Kubernetes
+      env:
+        KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        OCTO_KEY: ${{ secrets.OCTO_KEY }}
+        MESSAGE: ${{ secrets.MESSAGE }}
+      run: |
+        echo "$KUBE_CONFIG" > kubeconfig
+        export KUBECONFIG=./kubeconfig
+
+        # Update deployment YAML with new image tag
+        sed -i 's|image: .*|image: ghcr.io/${{ github.repository }}:${{ steps.get_commit_number.outputs.commit_number }}|' k8s.yaml
+
+        # Apply updated deployment
+        kubectl apply -f k8s.yaml
+
+        # Update secrets
+        kubectl create secret generic app-secrets \
+          --from-literal=MONGO_URI="$MONGO_URI" \
+          --from-literal=BOT_TOKEN="$BOT_TOKEN" \
+          --from-literal=OCTO_KEY="$OCTO_KEY" \
+          --from-literal=MESSAGE="$MESSAGE" \
+          -o yaml --dry-run=client | kubectl apply -f -
+
+        kubectl rollout restart deployment/flirty
+
+        kubectl rollout status deployment/flirty

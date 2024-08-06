@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flirty
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flirty
+  template:
+    metadata:
+      labels:
+        app: flirty
+    spec:
+      containers:
+      - name: flirty
+        image: ghcr.io/xarzoa/flirty:latest
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MONGO_URI
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: BOT_TOKEN
+        - name: OCTO_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: OCTO_KEY
+        - name: MESSAGE
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: MESSAGE
