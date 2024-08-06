@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun --bun --watch .",
-    "check": "bun biome check . --write"
+    "check": "bunx --bun biome check . --write",
+    "start": "bun --bun ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
@@ -19,5 +20,7 @@
     "hono": "^4.5.3",
     "mongodb": "^6.8.0"
   },
-  "trustedDependencies": ["@biomejs/biome"]
+  "trustedDependencies": [
+    "@biomejs/biome"
+  ]
 }
