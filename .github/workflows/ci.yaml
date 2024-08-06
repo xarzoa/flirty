@@ -30,7 +30,6 @@ jobs:
         tags: |
           ${{ github.repository }}:latest
           ${{ github.repository }}:${{ github.sha }}
-          ${{ github.repository }}:${{ steps.get_commit_number.outputs.commit_number }}
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
@@ -46,13 +45,10 @@ jobs:
         echo "$KUBE_CONFIG" > kubeconfig
         export KUBECONFIG=./kubeconfig
 
-        # Update deployment YAML with new image tag
-        sed -i 's|image: .*|image: ${{ github.repository }}:${{ steps.get_commit_number.outputs.commit_number }}|' k8s.yaml
+        sed -i 's|image: .*|image: ${{ github.repository }}:${{ github.sha }}|' k8s.yaml
 
-        # Apply updated deployment
         kubectl apply -f k8s.yaml
 
-        # Update secrets
         kubectl create secret generic app-secrets \
           --from-literal=MONGO_URI="$MONGO_URI" \
           --from-literal=BOT_TOKEN="$BOT_TOKEN" \
@@ -62,4 +58,15 @@ jobs:
 
         kubectl rollout restart deployment/flirty
 
-        kubectl rollout status deployment/flirty
+        kubectl rollout status deployment/flirty --timeout=300s
+
+        if [ $? -ne 0 ]; then
+          echo "Deployment did not complete in time. Printing debugging information:"
+          kubectl get pods
+          kubectl describe deployment flirty
+          kubectl describe pods -l app=flirty
+          kubectl logs -l app=flirty --all-containers --tail=100
+          exit 1
+        fi
+
+        echo "Deployment completed successfully"
