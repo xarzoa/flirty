@@ -1,4 +1,4 @@
-name: Build, Push to GHCR, and Deploy to Kubernetes
+name: Build and Deploy
 
 on:
   push:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout latest commit
       uses: actions/checkout@v3
 
     - name: Login to Docker Hub
@@ -17,10 +17,6 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_TOKEN }}
-
-    - name: Get commit number
-      id: get_commit_number
-      run: echo "::set-output name=commit_number::$(git rev-list --count HEAD)"
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
