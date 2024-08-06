@@ -40,7 +40,7 @@ jobs:
         MONGO_URI: ${{ secrets.MONGO_URI }}
         BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         OCTO_KEY: ${{ secrets.OCTO_KEY }}
-        MESSAGE: ${{ env.MESSAGE }}
+        MESSAGE: ${{ secrets.MESSAGE }}
       run: |
         echo "$KUBE_CONFIG" > kubeconfig
         export KUBECONFIG=./kubeconfig
