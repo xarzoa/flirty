@@ -1,14 +1,13 @@
-FROM oven/bun:1
+FROM oven/bun:1-slim
 
 WORKDIR /app
 
-COPY package.json ./
-COPY bun.lockb ./
+COPY package.json bun.lockb ./
 
-RUN bun install
+RUN bun install --production
 
 COPY . .
 
 ARG EnvironmentVariable
 
-CMD ["bun" , "start"]
+CMD ["bun", "start"]
